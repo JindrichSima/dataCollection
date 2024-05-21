@@ -1,0 +1,112 @@
+from bs4 import BeautifulSoup
+from gevent import monkey as curious_george
+curious_george.patch_all(thread=False, select=False)
+import requests
+import re
+import validators
+import sys
+
+# lists
+urlsList=[]
+
+
+def getUrlFromXML(site):
+    #print("XGO: "+ site)
+    r = requests.get(site)
+    s = BeautifulSoup(r.text, 'xml')
+    lines = (line.strip() for line in s.text.splitlines())
+    # break multi-headlines into a line each
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    # drop blank lines
+    text = '\n'.join(chunk for chunk in chunks if chunk)
+    text = text.replace('|', '')
+    for line in text.splitlines():
+        if not frschar in line:
+            continue
+        #print(line)
+        scrape(line)
+
+
+
+# function created
+def scrape(site):
+    if not (validators.url(site)):
+        print("ERROR: " + site)
+        return 0
+    if site in urlsList:
+        return 0
+    else:
+        urlsList.append(site)
+
+    exten = site.split(".")[-1]
+    exten = exten[:2]
+            #print(exten)
+    match exten:
+        case "xm":
+            print("XML: " + (site))
+            getUrlFromXML(site)
+            return 0
+        case "pd":
+             print("PDF: " + (site))
+             return 0
+        case "im":
+            print("IMAGE: " + (site))
+            return 0
+        case "pn":
+            print("IMAGE: " + (site))
+            return 0
+        case "jp":
+            print("IMAGE: " + (site))
+            return 0
+        case "we":
+            print("IMAGE: " + (site))
+            return 0
+    print(site)
+    # getting the request from url
+    r = requests.get(site)
+
+    # converting the text
+
+    s = BeautifulSoup(r.text, 'html.parser')
+
+    urls = [link.get('href') for link in s.find_all('a')]
+    for link in urls:
+
+        if link.startswith("/"):
+            link = sited+link
+
+        if not frschar in link:
+            continue
+        if '@' in link:
+            continue
+        if "hashtag" in link:
+            continue
+
+        try:
+          scrape(link)
+        except:
+            #print("ERROR: " + link)
+          pass
+
+
+# main function
+if __name__ =="__main__":
+    if len(sys.argv) <= 1:
+        print("Missing path to website.")
+    else:
+        print(sys.argv[1])
+
+        # website to be scrape
+        site=sys.argv[1]
+
+        frschar = (re.search(r"^(?:https?:)?(?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n]+)",site).group(1))
+        sited = "https://www." +frschar
+        if(len(frschar)>= 4):
+            frschar = frschar[:4]
+        else:
+            frschar = frschar[:1]
+
+        scrape(site)
+
+        #getUrlFromXML(site)
+#TODO: Save to file
